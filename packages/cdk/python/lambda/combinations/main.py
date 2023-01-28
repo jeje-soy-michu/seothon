@@ -4,6 +4,7 @@ import re
 import boto3
 
 
+BUCKET_NAME = os.environ['BUCKET_NAME']
 NEW_LINE = "\n"
 SPACE = " "
 
@@ -15,7 +16,7 @@ def upload_to_s3(text: str, s3_key: str):
   :param text: Text to upload
   :param s3_key: S3 key to upload to
   """
-  s3.put_object(Body=text.encode(), Bucket=os.environ['BUCKET_NAME'], Key=s3_key)
+  s3.put_object(Body=text.encode(), Bucket=BUCKET_NAME, Key=s3_key)
 
 def get_combinations(post: str, combination_length: int = 7):
   """
@@ -41,7 +42,7 @@ def handler(event, context):
   request_id = context.aws_request_id
   post_text = payload["text"]
 
-  combinations = get_combinations(post_text, 2)
+  combinations  = get_combinations(post_text, 2)
   combinations += get_combinations(post_text, 4)
   combinations += get_combinations(post_text, 7)
 
