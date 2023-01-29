@@ -23,6 +23,7 @@ def fetch_embeddings(file_key: str):
   combinations_df["embeddings"] = response.embeddings
 
   combinations_df.to_parquet(f"s3://{BUCKET_NAME}/requests/{request_id}/new-embeddings/{file_name}", index=False)
+  combinations_df.to_parquet(f"s3://{BUCKET_NAME}/embeddings-cache/{request_id}.snappy.parquet", index=False)
 
 if __name__ == '__main__':
   app()
