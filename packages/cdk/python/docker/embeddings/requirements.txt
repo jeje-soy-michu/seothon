@@ -1,0 +1,6 @@
+cohere
+fsspec
+pandas
+pyarrow
+s3fs
+typer
