@@ -1,7 +1,9 @@
-import { component$, Slot } from '@builder.io/qwik'
+import { component$, Slot, useClientEffect$ } from '@builder.io/qwik'
 import Header from '../components/header/header'
+import { themeChange } from 'theme-change'
 
 export default component$(() => {
+  useClientEffect$(() => themeChange(false), {eagerness: 'load'})
   return (
     <>
       <main>
