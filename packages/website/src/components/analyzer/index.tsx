@@ -1,4 +1,5 @@
 import { component$ } from '@builder.io/qwik'
+import Keywords from '~/components/analyzer/keywords'
 
 export default component$(() => {
 
@@ -10,6 +11,7 @@ export default component$(() => {
         placeholder="Introduce your text to analyze"
         id="text"
       ></textarea>
+      <Keywords></Keywords>
     </div>
   )
 })
