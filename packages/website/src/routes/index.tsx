@@ -1,5 +1,6 @@
 import { component$ } from '@builder.io/qwik'
 import type { DocumentHead } from '@builder.io/qwik-city'
+import Analyzer from '~/components/analyzer'
 import Faq from '~/components/faq/faq'
 
 export default component$(() => {
@@ -8,14 +9,7 @@ export default component$(() => {
       <h1>
         Seothon
       </h1>
-      <div>
-        <label for="text">Text to analyze</label>
-        <textarea
-          class="w-full rounded-lg border-gray-200 p-3 text-sm"
-          placeholder="Introduce your text to analyze"
-          id="text"
-        ></textarea>
-      </div>
+      <Analyzer></Analyzer>
       <div class="divider"></div>
       <h2>FAQ</h2>
       <Faq />
