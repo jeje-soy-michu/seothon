@@ -16,6 +16,7 @@ export default component$(() => {
           id="text"
         ></textarea>
       </div>
+      <div class="divider"></div>
       <h2>FAQ</h2>
       <Faq />
     </div>

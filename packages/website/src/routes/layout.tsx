@@ -11,9 +11,11 @@ export default component$(() => {
           <div class="hero-content text-center">
             <div class="max-w-md">
               <Header />
+              <div class="divider"></div>
               <section>
                 <Slot />
               </section>
+              <div class="divider"></div>
               <footer>
                 Footer
               </footer>
