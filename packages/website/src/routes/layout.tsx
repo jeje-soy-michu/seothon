@@ -7,14 +7,20 @@ export default component$(() => {
   return (
     <>
       <main>
-        <Header />
-        <section>
-          <Slot />
-        </section>
+        <div class="hero min-h-screen bg-base-200">
+          <div class="hero-content text-center">
+            <div class="max-w-md">
+              <Header />
+              <section>
+                <Slot />
+              </section>
+              <footer>
+                Footer
+              </footer>
+            </div>
+          </div>
+        </div>
       </main>
-      <footer>
-        Footer
-      </footer>
     </>
   )
 })
