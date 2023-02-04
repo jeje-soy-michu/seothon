@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib'
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
@@ -169,6 +169,8 @@ export class ApiStack extends Stack {
         BUCKET_NAME: this._bucket.bucketName,
         COHERE_API_KEY_ARN: this._cohereApiKey.secretArn,
       },
+      memorySize: 256,
+      timeout: Duration.seconds(45),
     })
     
     this._bucket.grantReadWrite(keywordsHandler)

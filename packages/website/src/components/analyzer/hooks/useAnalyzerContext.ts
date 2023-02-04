@@ -2,10 +2,6 @@ import { createContext, useContext, useContextProvider, useStore } from "@builde
 import { demoState } from "~/components/analyzer/hooks/demoContent"
 import type { Keyword } from "~/components/analyzer/keyword"
 
-export const AnalyzerStatus = {
-  WAITING_FOR_INPUT: "WAITING_FOR_INPUT",
-}
-
 export type AnalyzerState = {
   post: string
   keywords: Keyword[],

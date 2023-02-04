@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik'
-import { AnalyzerStatus, useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
+import { useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
 
 export default component$(() => {
   const context = useAnalyzerContext()
@@ -9,7 +9,7 @@ export default component$(() => {
       context.post = ""
       context.keywords = []
       context.keywordId = 0
-      context.status = AnalyzerStatus.WAITING_FOR_INPUT
+      context.status = "WAITING_FOR_INPUT"
     }}>Clear</button>
   )
 })
