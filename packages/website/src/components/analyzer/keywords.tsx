@@ -8,7 +8,7 @@ export default component$(() => {
   return (
     <div class="flex-col w-1/5 p-5">
       <NewKeyword />
-      {keywords.map(keyword => <Keyword {...keyword} />)}
+      {keywords.map(keyword => <Keyword key={keyword.id} {...keyword} />)}
     </div>
   )
 })
