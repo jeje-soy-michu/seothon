@@ -91,5 +91,5 @@ def handler(event, _):
     "headers": {
       "Content-Type": "application/json"
     },
-    "body": score_df[['combination', 'score']].set_index('combination').to_json()
+    "body": score_df[['combination', 'query_1', 'score']].set_index('combination').to_json()
   }
