@@ -7,10 +7,12 @@ from pyspark.sql import SparkSession
 
 s3 = boto3.client('s3')
 
-def cache_exists(bucket_name: str, file_key: str):
+def cache_exists(bucket_name: str, file_key: str) -> bool:
   '''
-  Folder should exists. 
-  Folder should not be empty.
+  Checks if a file exists in S3
+  :param bucket_name: Name of the bucket
+  :param file_key: Key of the file
+  :return: True if the file exists, False otherwise
   '''
   if not file_key.endswith('/'):
     file_key = file_key + '/' 
