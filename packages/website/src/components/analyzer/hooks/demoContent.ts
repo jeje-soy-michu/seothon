@@ -1,5 +1,4 @@
 import type { AnalyzerState } from "~/components/analyzer/hooks/useAnalyzerContext"
-import { AnalyzerStatus } from "~/components/analyzer/hooks/useAnalyzerContext"
 
 const post = `Search engine optimization
 
