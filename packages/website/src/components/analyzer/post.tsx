@@ -1,6 +1,8 @@
 import { component$ } from '@builder.io/qwik'
+import { useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
 
 export default component$(() => {
+  const context = useAnalyzerContext()
   return (
     <div class="flex-row w-4/5 p-5">
       <label for="text">Text to analyze</label>
@@ -8,7 +10,12 @@ export default component$(() => {
         class="textarea textarea-bordered textarea-lg w-full h-full"
         placeholder="Introduce your text to analyze"
         id="text"
-      ></textarea>
+        onInput$={(event) => {
+          if (!event.target) return
+          context.post = (event.target as HTMLTextAreaElement).value
+        }}
+        value={context.post}
+      />
     </div>
   )
 })

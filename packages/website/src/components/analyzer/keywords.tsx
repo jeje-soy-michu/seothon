@@ -1,31 +1,14 @@
 import { component$ } from '@builder.io/qwik'
+import { useKeywords } from '~/components/analyzer/hooks/useKeywords'
+import Keyword from '~/components/analyzer/keyword'
+import NewKeyword from '~/components/analyzer/new-keyword'
 
 export default component$(() => {
-
+  const keywords = useKeywords()
   return (
-    <div class="overflow-x-auto">
-      <table class="table w-full">
-        <thead>
-          <tr>
-            <th>Index</th>
-            <th>Keyword</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>1</th>
-            <td>Cy Ganderton</td>
-          </tr>
-          <tr>
-            <th>2</th>
-            <td>Hart Hagerty</td>
-          </tr>
-          <tr>
-            <th>3</th>
-            <td>Brice Swyre</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="flex-col w-1/5 p-5">
+      <NewKeyword />
+      {keywords.map(keyword => <Keyword {...keyword} />)}
     </div>
   )
 })
