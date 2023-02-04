@@ -1,4 +1,5 @@
-import type { AnalyzerState} from "~/components/analyzer/hooks/useAnalyzerContext"
+import type { AnalyzerState } from "~/components/analyzer/hooks/useAnalyzerContext"
+import { AnalyzerStatus } from "~/components/analyzer/hooks/useAnalyzerContext"
 
 const post = `Search engine optimization
 
@@ -27,7 +28,8 @@ export const demoState: AnalyzerState = {
     {id: 16, text: 'Targeted audience', volume: 8000},
     {id: 17, text: 'SERP', volume: 6800},
     {id: 18, text: 'Visitors', volume: 7000},
-    {id: 19, text: 'Customers', volume: 7500}
+    {id: 19, text: 'Customers', volume: 7500},
   ],
-  keywordId: 20
+  keywordId: 20,
+  status: AnalyzerStatus.WAITING_FOR_INPUT,
 }

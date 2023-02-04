@@ -1,7 +1,7 @@
 import { component$ } from '@builder.io/qwik'
 import { useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
 
-export default component$(() => {
+export const InputTextArea = component$(() => {
   const context = useAnalyzerContext()
   return (
     <div class="flex-row w-4/5 p-5">
@@ -18,4 +18,8 @@ export default component$(() => {
       />
     </div>
   )
+})
+
+export default component$(() => {
+  return <InputTextArea />
 })

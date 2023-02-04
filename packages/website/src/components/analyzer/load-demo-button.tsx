@@ -10,6 +10,7 @@ export default component$(() => {
       context.post = demoState.post
       context.keywords = demoState.keywords
       context.keywordId = demoState.keywordId
+      context.status = demoState.status
     }}>Load demo</button>
   )
 })
