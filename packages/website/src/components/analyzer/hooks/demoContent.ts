@@ -28,5 +28,6 @@ export const demoState: AnalyzerState = {
     {id: 17, text: 'SERP', volume: 6800},
     {id: 18, text: 'Visitors', volume: 7000},
     {id: 19, text: 'Customers', volume: 7500}
-  ]
+  ],
+  keywordId: 20
 }
