@@ -1,4 +1,5 @@
 import { component$ } from '@builder.io/qwik'
+import ClearButton from '~/components/analyzer/clear-button'
 import { useAnalyzerProvider } from '~/components/analyzer/hooks/useAnalyzerContext'
 import Keywords from '~/components/analyzer/keywords'
 import LoadDemoButton from '~/components/analyzer/load-demo-button'
@@ -16,7 +17,7 @@ export default component$(() => {
       <div class="flex justify-center p-3">
         <LoadDemoButton />
         <button class="btn m-3">Analyze</button>
-        <button class="btn m-3">Clear</button>
+        <ClearButton />
       </div>
     </div>
   )
