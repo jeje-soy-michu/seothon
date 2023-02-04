@@ -9,6 +9,7 @@ export default component$(() => {
     <button class="btn m-3" onClick$={() => {
       context.post = demoState.post
       context.keywords = demoState.keywords
+      context.keywordId = demoState.keywordId
     }}>Load demo</button>
   )
 })
