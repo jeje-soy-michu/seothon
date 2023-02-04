@@ -132,6 +132,7 @@ export class ApiStack extends Stack {
       }),
       workerCount: 2,
       workerType: glue_alpha.WorkerType.G_1X,
+      enableProfilingMetrics: true,
     })
 
     this._bucket.grantReadWrite(embeddings_cache)
