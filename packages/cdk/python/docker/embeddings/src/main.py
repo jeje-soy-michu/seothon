@@ -6,6 +6,7 @@ import pandas as pd
 import typer
 
 from score import calculate_words_score, get_combinations
+from utils import send_message
 
 
 BUCKET_NAME = os.environ['BUCKET_NAME']
@@ -50,7 +51,9 @@ def calculate_score(request_id: str, file_name: str, use_new_embeddings: bool = 
   keywords_df = embeddings_df[embeddings_df['type'] == "keyword"]
   post_text = s3.get_object(Bucket=BUCKET_NAME, Key=f"requests/{request_id}/post.txt")['Body'].read().decode('utf-8')
 
-  print(calculate_words_score(post_text, combinations_df, keywords_df))
+  scores = calculate_words_score(post_text, combinations_df, keywords_df)
+
+  send_message(request_id, json.dumps(scores))
 
 @app.command()
 def fast_cache(request_id: str):
@@ -80,7 +83,9 @@ def fast_cache(request_id: str):
     print("No combinations found")
     return
 
-  print(calculate_words_score(post_text, combinations_df, keywords_df))
+  scores = calculate_words_score(post_text, combinations_df, keywords_df)
+
+  send_message(request_id, json.dumps(scores))
 
 if __name__ == '__main__':
   app()

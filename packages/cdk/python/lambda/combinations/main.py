@@ -6,6 +6,7 @@ import boto3
 
 BUCKET_NAME = os.environ['BUCKET_NAME']
 EMBEDDINGS_CACHE_JOB_NAME = os.environ['EMBEDDINGS_CACHE_JOB_NAME']
+WS_ENDPOINT_URL = os.environ['WS_ENDPOINT_URL']
 QUEUE_URL = os.environ['QUEUE_URL']
 NEW_LINE = "\n"
 SPACE = " "
@@ -13,6 +14,7 @@ SPACE = " "
 s3 = boto3.client('s3')
 sqs = boto3.client('sqs')
 glue = boto3.client('glue')
+ws = boto3.client('apigatewaymanagementapi', endpoint_url=WS_ENDPOINT_URL)
 
 def get_combinations(post: str, combination_length: int = 7):
   """
@@ -35,21 +37,21 @@ def get_combinations(post: str, combination_length: int = 7):
   
   return combinations
 
-def handler(event, context):
+def handler(event, _):
   payload = json.loads(event["body"])
-  request_id = context.aws_request_id
-  post_text = payload["text"]
-  keywords = payload["keywords"]
+  request_id = event["requestContext"]["connectionId"]
 
   # Verify all required fields are present
-  if not request_id or not post_text or not keywords:
+  if not payload.get("text") or not payload.get("keywords"):
+    ws.post_to_connection(Data=b"Missing required fields", ConnectionId=request_id)
     return {
       "statusCode": 400,
-      "headers": {
-        "Content-Type": "text/plain"
-      },
       "body": "Missing required fields"
     }
+
+  ws.post_to_connection(Data=b"Analysis started", ConnectionId=request_id)
+  post_text = payload["text"]
+  keywords = payload["keywords"]
   
   # Save post to S3
   s3.put_object(Body=post_text, Bucket=BUCKET_NAME, Key=f"requests/{request_id}/post.txt")

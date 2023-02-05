@@ -11,8 +11,9 @@
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@aws-cdk/aws-apigatewayv2-alpha": "2.62.2-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "2.62.2-alpha.0",
     "@aws-cdk/aws-glue-alpha": "2.62.2-alpha.0",
-    "@aws-cdk/aws-lambda-python-alpha": "2.62.2-alpha.0",
     "@types/jest": "^29.2.5",
     "@types/node": "18.11.18",
     "aws-cdk": "2.62.2",

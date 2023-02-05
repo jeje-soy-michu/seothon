@@ -4,8 +4,9 @@ importers:
 
   packages/cdk:
     specifiers:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.62.2-alpha.0
+      '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.62.2-alpha.0
       '@aws-cdk/aws-glue-alpha': 2.62.2-alpha.0
-      '@aws-cdk/aws-lambda-python-alpha': 2.62.2-alpha.0
       '@types/jest': ^29.2.5
       '@types/node': 18.11.18
       aws-cdk: 2.62.2
@@ -21,8 +22,9 @@ importers:
       constructs: 10.1.232
       source-map-support: 0.5.21
     devDependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be
+      '@aws-cdk/aws-apigatewayv2-integrations-alpha': 2.62.2-alpha.0_gctgnvspevmk3r6tgstxtq4oi4
       '@aws-cdk/aws-glue-alpha': 2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be
-      '@aws-cdk/aws-lambda-python-alpha': 2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be
       '@types/jest': 29.4.0
       '@types/node': 18.11.18
       aws-cdk: 2.62.2
@@ -95,8 +97,8 @@ packages:
   /@aws-cdk/asset-node-proxy-agent-v5/2.0.42:
     resolution: {integrity: sha512-PxvP1UU2xa4k3Ea78DxAYY8ADvwWZ/nPu+xsjQLsT+MP+aB3RZ3pGc/fNlH7Rg56Zyb/j3GSdihAy4Oi5xa+TQ==}
 
-  /@aws-cdk/aws-glue-alpha/2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be:
-    resolution: {integrity: sha512-cUWxoalxBBRJdTDpKkkyLEZae0eBQASTZcIguR1VVfq4g7MX2OIpwWkR5FjcivXbuTxYO5k/rZkfeeDC/i3vPA==}
+  /@aws-cdk/aws-apigatewayv2-alpha/2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be:
+    resolution: {integrity: sha512-MHnUWA846ksR8KNcxSGsrKCpUWuQfjwFiMyJE6gf2BugyDTtmdJCxWv7YAxk26s5hg87+JPqZ7VLPmxysBJvBg==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
       aws-cdk-lib: ^2.62.2
@@ -106,8 +108,21 @@ packages:
       constructs: 10.1.232
     dev: true
 
-  /@aws-cdk/aws-lambda-python-alpha/2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be:
-    resolution: {integrity: sha512-Uc6QqU092q1e7/g/24LTJK9xNVM6GDPdIRaZjfyibh+J27pZOQkHkiTAIPFeqkIJ9UzSB4pg4RjWGGgO/Wo5TQ==}
+  /@aws-cdk/aws-apigatewayv2-integrations-alpha/2.62.2-alpha.0_gctgnvspevmk3r6tgstxtq4oi4:
+    resolution: {integrity: sha512-dfqtZQhf1dnzaWCEjAB2PUvG4ftyaBbeEgsaHXsRduOf8TanSbpbbenP857+Q17t6V11cs41WZK3u8AEfudxzQ==}
+    engines: {node: '>= 14.15.0'}
+    peerDependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.62.2-alpha.0
+      aws-cdk-lib: ^2.62.2
+      constructs: ^10.0.0
+    dependencies:
+      '@aws-cdk/aws-apigatewayv2-alpha': 2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be
+      aws-cdk-lib: 2.62.2_constructs@10.1.232
+      constructs: 10.1.232
+    dev: true
+
+  /@aws-cdk/aws-glue-alpha/2.62.2-alpha.0_rg7lzw33woettqjb3rmzupa3be:
+    resolution: {integrity: sha512-cUWxoalxBBRJdTDpKkkyLEZae0eBQASTZcIguR1VVfq4g7MX2OIpwWkR5FjcivXbuTxYO5k/rZkfeeDC/i3vPA==}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
       aws-cdk-lib: ^2.62.2

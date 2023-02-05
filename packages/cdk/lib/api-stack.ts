@@ -1,5 +1,6 @@
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib'
-import * as apigateway from 'aws-cdk-lib/aws-apigateway'
+import * as apigwv2 from '@aws-cdk/aws-apigatewayv2-alpha'
+import * as apigwv2_integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as glue_alpha from '@aws-cdk/aws-glue-alpha'
@@ -16,7 +17,8 @@ export class ApiStack extends Stack {
 
   private _bucket: s3.Bucket
   private _cohereApiKey: secretsmanager.Secret
-  private _restApi: apigateway.RestApi
+  private _webSocketApi: apigwv2.WebSocketApi
+  private _webSocketStage: apigwv2.WebSocketStage
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props)
@@ -26,7 +28,12 @@ export class ApiStack extends Stack {
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
     })
-    this._restApi = new apigateway.RestApi(this, 'RestApi')
+    this._webSocketApi = new apigwv2.WebSocketApi(this, 'WebSocketApi')
+    this._webSocketStage = new apigwv2.WebSocketStage(this, 'ProdStage', {
+      webSocketApi: this._webSocketApi,
+      stageName: 'prod',
+      autoDeploy: true,
+    })
     
     this._setupGlueJobs()
     this._setupEmbeddings()
@@ -63,6 +70,8 @@ export class ApiStack extends Stack {
       memoryLimitMiB: 896,
       environment: {
         BUCKET_NAME: this._bucket.bucketName,
+        WS_ENDPOINT_URL: this._webSocketStage.callbackUrl,
+        AWS_DEFAULT_REGION: Stack.of(this).region,
       },
       secrets: {
         COHERE_API_KEY: ecs.Secret.fromSecretsManager(this._cohereApiKey),
@@ -74,6 +83,9 @@ export class ApiStack extends Stack {
 
     // Grant the container access to the S3 bucket
     this._bucket.grantReadWrite(ec2TaskDefinition.taskRole)
+
+    // Grant the container access to write to WebSockets
+    this._webSocketStage.grantManagementApiAccess(ec2TaskDefinition.taskRole)
 
     // Create a task definition for the Fargate service
     const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'FargateTaskDef', {
@@ -87,6 +99,7 @@ export class ApiStack extends Stack {
       memoryLimitMiB: 61440,
       environment: {
         BUCKET_NAME: this._bucket.bucketName,
+        WS_ENDPOINT_URL: this._webSocketStage.callbackUrl,
       },
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: 'FastCache',
@@ -96,6 +109,8 @@ export class ApiStack extends Stack {
     // Grant the container access to the S3 bucket
     this._bucket.grantReadWrite(fargateTaskDefinition.taskRole)
 
+    // Grant the container access to write to WebSockets
+    this._webSocketStage.grantManagementApiAccess(fargateTaskDefinition.taskRole)
 
     // Create a lambda function to orchestrate the ECS task
     const orchestrationHandler = new lambda.Function(this, 'EcsOrchestrationLambda', {
@@ -157,6 +172,7 @@ export class ApiStack extends Stack {
         QUEUE_URL: glueSQSQueue.queueUrl,
         BUCKET_NAME: this._bucket.bucketName,
         EMBEDDINGS_CACHE_JOB_NAME: embeddings_cache.jobName,
+        WS_ENDPOINT_URL: this._webSocketStage.callbackUrl,
       }
     })
 
@@ -168,13 +184,9 @@ export class ApiStack extends Stack {
     )
     glueSQSQueue.grantSendMessages(combinationsHandler)
     this._bucket.grantWrite(combinationsHandler)
+    this._webSocketStage.grantManagementApiAccess(combinationsHandler)
 
-    const combinationsIntegration = new apigateway.LambdaIntegration(combinationsHandler)
-    
-    const resource = this._restApi.root.addResource('process_text', {
-      defaultIntegration: combinationsIntegration,
-    })
-
-    resource.addMethod('POST')
+    const combinationsIntegration = new apigwv2_integrations.WebSocketLambdaIntegration("webSocketHandler", combinationsHandler)
+    this._webSocketApi.addRoute('analyze', {integration: combinationsIntegration})
   }
 }
