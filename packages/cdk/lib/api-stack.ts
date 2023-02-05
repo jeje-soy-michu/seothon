@@ -75,6 +75,28 @@ export class ApiStack extends Stack {
     // Grant the container access to the S3 bucket
     this._bucket.grantReadWrite(ec2TaskDefinition.taskRole)
 
+    // Create a task definition for the Fargate service
+    const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'FargateTaskDef', {
+      cpu: 8192,
+      memoryLimitMiB: 61440,
+    })
+
+    // Add a container to the task definition
+    const fargateContainer = fargateTaskDefinition.addContainer('FastCache', {
+      image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../python/docker/embeddings')),
+      memoryLimitMiB: 61440,
+      environment: {
+        BUCKET_NAME: this._bucket.bucketName,
+      },
+      logging: ecs.LogDrivers.awsLogs({
+        streamPrefix: 'FastCache',
+      })
+    })
+
+    // Grant the container access to the S3 bucket
+    this._bucket.grantReadWrite(fargateTaskDefinition.taskRole)
+
+
     // Create a lambda function to orchestrate the ECS task
     const orchestrationHandler = new lambda.Function(this, 'EcsOrchestrationLambda', {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -83,18 +105,27 @@ export class ApiStack extends Stack {
       environment: {
         CLUSTER_NAME: cluster.clusterName,
         CONTAINER_NAME: container.containerName,
+        FARGATE_CONTAINER_NAME: fargateContainer.containerName,
+        FARGATE_TASK_DEFINITION_ARN: fargateTaskDefinition.taskDefinitionArn,
+        FARGATE_SUBNETS: vpc.publicSubnets.map(subnet => subnet.subnetId).join(','),
         TASK_DEFINITION_ARN: ec2TaskDefinition.taskDefinitionArn,
       }
     })
 
     // Grant the lambda run task permissions on the cluster
     ec2TaskDefinition.grantRun(orchestrationHandler)
+    fargateTaskDefinition.grantRun(orchestrationHandler)
 
     // Trigger the lambda function when a new parquet file is added to the requests folder in the bucket
     this._bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(orchestrationHandler),
       {prefix: 'requests/', suffix: '.snappy.parquet'},
+    )
+    this._bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(orchestrationHandler),
+      {prefix: 'requests/', suffix: 'keywords.json'},
     )
   }
 

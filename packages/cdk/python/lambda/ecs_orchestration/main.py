@@ -5,6 +5,9 @@ import urllib.parse
 
 CLUSTER_NAME = os.environ['CLUSTER_NAME']
 CONTAINER_NAME = os.environ['CONTAINER_NAME']
+FARGATE_CONTAINER_NAME = os.environ['FARGATE_CONTAINER_NAME']
+FARGATE_TASK_DEFINITION_ARN = os.environ['FARGATE_TASK_DEFINITION_ARN']
+FARGATE_SUBNETS = os.environ['FARGATE_SUBNETS'].split(',')
 TASK_DEFINITION_ARN = os.environ['TASK_DEFINITION_ARN']
 
 client = boto3.client('ecs')
@@ -44,4 +47,23 @@ def handler(event, _):
       'taskDefinition': TASK_DEFINITION_ARN,
     }
     
+    client.run_task(**args)
+  elif key.split('/')[-1] == 'keywords.json':
+    request_id = key.split('/')[-2]
+    args = {
+      'cluster': CLUSTER_NAME,
+      'capacityProviderStrategy': [ {'capacityProvider': 'FARGATE_SPOT', 'weight': 1, 'base': 0} ],
+      'overrides': {
+        'containerOverrides': [
+          {'name': FARGATE_CONTAINER_NAME, 'command': [ "fast-cache", request_id ]},
+        ],
+      },
+      'networkConfiguration': {
+        'awsvpcConfiguration': {
+          'subnets': FARGATE_SUBNETS,
+          'assignPublicIp': 'ENABLED',
+        },
+      },
+      'taskDefinition': FARGATE_TASK_DEFINITION_ARN,
+    }
     client.run_task(**args)

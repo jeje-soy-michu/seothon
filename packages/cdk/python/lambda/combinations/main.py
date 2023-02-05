@@ -53,10 +53,9 @@ def handler(event, context):
   
   # Save post to S3
   s3.put_object(Body=post_text, Bucket=BUCKET_NAME, Key=f"requests/{request_id}/post.txt")
+  s3.put_object(Body=json.dumps(keywords), Bucket=BUCKET_NAME, Key=f"requests/{request_id}/keywords.json")
 
   combinations  = get_combinations(post_text, 1)
-
-  # Get combinations of 2, 4, and 7 words
   combinations += get_combinations(post_text, 2)
   combinations += get_combinations(post_text, 4)
   combinations += get_combinations(post_text, 7)
