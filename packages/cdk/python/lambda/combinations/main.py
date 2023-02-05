@@ -5,18 +5,14 @@ import boto3
 
 
 BUCKET_NAME = os.environ['BUCKET_NAME']
+EMBEDDINGS_CACHE_JOB_NAME = os.environ['EMBEDDINGS_CACHE_JOB_NAME']
+QUEUE_URL = os.environ['QUEUE_URL']
 NEW_LINE = "\n"
 SPACE = " "
 
 s3 = boto3.client('s3')
-
-def upload_to_s3(text: str, s3_key: str):
-  """
-  Uploads a text to S3
-  :param text: Text to upload
-  :param s3_key: S3 key to upload to
-  """
-  s3.put_object(Body=text.encode(), Bucket=BUCKET_NAME, Key=s3_key)
+sqs = boto3.client('sqs')
+glue = boto3.client('glue')
 
 def get_combinations(post: str, combination_length: int = 7):
   """
@@ -25,8 +21,10 @@ def get_combinations(post: str, combination_length: int = 7):
   :param combination_length: Length of each combination
   :return: List of combinations
   """
-  assert combination_length > 0, "Combination length must be greater than 0"
-  words = re.sub(r"(\\n)+", SPACE, post).split(SPACE)
+  # Remove the \n characters from the post
+  post = re.sub(NEW_LINE, SPACE, post)
+
+  words = list(filter(lambda x: x, post.split(SPACE)))
 
   combination = words[:combination_length]
 
@@ -41,13 +39,49 @@ def handler(event, context):
   payload = json.loads(event["body"])
   request_id = context.aws_request_id
   post_text = payload["text"]
+  keywords = payload["keywords"]
 
-  combinations  = get_combinations(post_text, 2)
+  # Verify all required fields are present
+  if not request_id or not post_text or not keywords:
+    return {
+      "statusCode": 400,
+      "headers": {
+        "Content-Type": "text/plain"
+      },
+      "body": "Missing required fields"
+    }
+  
+  # Save post to S3
+  s3.put_object(Body=post_text, Bucket=BUCKET_NAME, Key=f"requests/{request_id}/post.txt")
+
+  combinations  = get_combinations(post_text, 1)
+
+  # Get combinations of 2, 4, and 7 words
+  combinations += get_combinations(post_text, 2)
   combinations += get_combinations(post_text, 4)
   combinations += get_combinations(post_text, 7)
 
-  upload_to_s3(NEW_LINE.join(combinations), f"requests/{request_id}/combinations.txt")
-  upload_to_s3(post_text, f"requests/{request_id}/post.txt")
+  params = {
+    "request_id": request_id,
+    "post_text": post_text,
+    "combinations": combinations,
+    "keywords": keywords,
+  }
+
+  # Send to SQS
+  sqs.send_message(QueueUrl=QUEUE_URL,MessageBody=json.dumps(params))
+
+  # Start Glue job
+  args = {
+    '--bucket_name': BUCKET_NAME,
+    '--sqs_queue_url': QUEUE_URL,
+  }
+
+  try:
+    glue.start_job_run(JobName=EMBEDDINGS_CACHE_JOB_NAME, Arguments=args)
+  except boto3.exceptions.botocore.exceptions.ClientError as e:
+    if e.response['Error']['Code'] != 'ConcurrentRunsExceededException':
+      raise e
 
   return {
     "statusCode": 200,

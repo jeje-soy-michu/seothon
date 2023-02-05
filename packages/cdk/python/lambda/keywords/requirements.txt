@@ -1,3 +1,0 @@
-cohere
-numpy
-pandas
