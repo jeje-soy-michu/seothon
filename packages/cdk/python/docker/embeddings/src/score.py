@@ -1,14 +1,11 @@
-import math
 import re
 import numpy as np
 import pandas as pd
 
+
 NEW_LINE = "\n"
 SPACE = " "
 TOP_AMOUNT = 4
-
-score_cols = [f"score_{i}" for i in range(1, TOP_AMOUNT + 1)]
-query_cols = [f"query_{i}" for i in range(1, TOP_AMOUNT + 1)]
 
 def cosine_similarity(a, b):
   return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
@@ -34,59 +31,60 @@ def get_combinations(post: str, combination_length: int = 7):
   
   return combinations
 
-def parse_queries_and_scores(df: pd.DataFrame):
-  cols = zip(query_cols, score_cols)
-  return [{"query": df[q].item(), "score": df[s].item()} for q, s in cols]
-
-def calculate_words_score(post_text: str, combinations: pd.DataFrame, keywords: pd.DataFrame):
-  combinations['score'] = 0
+def calculate_words_score(post_text: str, embeddings_df: pd.DataFrame):
+  combinations = embeddings_df[embeddings_df['type'] == "combination"]
+  keywords = embeddings_df[embeddings_df['type'] == "keyword"]
   
-  for i in range(1, TOP_AMOUNT + 1):
-    combinations[f"score_{i}"] = -math.inf
-  for _, row in keywords.iterrows():
-    embeddings = row["embeddings"]
-    query = row["text"]
-    impressions = row["volume"]
+  combinations = combinations.drop_duplicates(["text"]).drop(columns=["type", "volume"])
+  keywords = keywords.drop_duplicates(["text"]).rename(columns={"text": "query", "embeddings": "query_embeddings"}).drop(columns=["type"])
+  
+  # Merge the keywords and combinations dataframes by text
+  keywords_and_combinations = combinations.merge(keywords, how="cross")
 
-    combinations["similarity"] = combinations.embeddings.apply(lambda x: cosine_similarity(x, embeddings))
-    combinations["score"] += combinations["similarity"] * impressions
+  # Get the similarity score the keywords and combinations
+  keywords_and_combinations["similarity"] = keywords_and_combinations.apply(lambda x: cosine_similarity(x["embeddings"], x["query_embeddings"]), axis=1)
 
-    filtered = combinations
-    prev = True
-    for i in range(1, TOP_AMOUNT + 1):
-      query_col_name = f"query_{i}"
-      score_col_name = f"score_{i}"
+  # Drop the embeddings columns
+  keywords_and_combinations = keywords_and_combinations.drop(columns=["embeddings", "query_embeddings"])
 
-      row_idx = prev & (filtered["similarity"] > filtered[score_col_name])
-      if filtered[row_idx].empty:
-        break
-      
-      #FIXME: Bug dropping some values here (Overriding instead of sliding)
-      filtered.loc[row_idx, query_col_name] = query
-      filtered.loc[row_idx, score_col_name] = combinations["similarity"]
+  # Get the combinations for the post
+  keywords_and_combinations["score"] = keywords_and_combinations["similarity"] * keywords_and_combinations["volume"]
 
-      prev = filtered["similarity"] < filtered[score_col_name]
-  combinations = combinations.drop(columns=["similarity"])
+  # Drop the volume column
+  keywords_and_combinations = keywords_and_combinations.drop(columns=["volume"])
 
-  max_sim = combinations['score'].max()
-  min_sim = combinations['score'].min()
-  dif_sim = max_sim - min_sim
-  combinations['score'] = (combinations['score'] - min_sim) / dif_sim
+  # Get the score for each combination
+  scores = keywords_and_combinations.groupby(["text"]).agg({"score": "sum"})
 
-  combinations['n_words'] = combinations.text.apply(lambda x: len(x.split(" ")))
+  # Add the scores to the keywords and combinations dataframe
+  keywords_and_combinations = keywords_and_combinations.drop(columns=["score"]).merge(scores, how="inner", on="text")
 
+  # Normalize the scores between 0 and 1
+  keywords_and_combinations["score"] = (keywords_and_combinations["score"] - keywords_and_combinations["score"].min()) / (keywords_and_combinations["score"].max() - keywords_and_combinations["score"].min())
+
+  # Sort the keywords and combinations by similarity
+  keywords_and_combinations = keywords_and_combinations.sort_values(by="similarity", ascending=False)
+
+  # Get the number of words for each combination
+  keywords_and_combinations["n_words"] = keywords_and_combinations.text.apply(lambda x: len(x.split(" ")))
+
+  # Get the words for the post
   words = list(map(lambda x: {"word": x, "combinations": []}, get_combinations(post_text, 1)))
-  for n_words in combinations["n_words"].unique():
+  
+  # Get the combinations for each word
+  for n_words in keywords_and_combinations["n_words"].unique():
     word_combinations = get_combinations(post_text, n_words)
     for i, word in enumerate(words, 1):
       min_index = max(i-n_words, 0)
       word["combinations"] += word_combinations[min_index:i]
-
+  
+  # Get the best TOP_AMOUNT combinations for each word
   for word in words:
-    idxmax = combinations[combinations.text.isin(word['combinations'])]["score"].idxmax()
-    best_match = combinations.loc[[idxmax]]
-    word["score"] = best_match["score"].item()
-    word["queries"] = parse_queries_and_scores(best_match)
+    word_combinations = keywords_and_combinations[keywords_and_combinations.text.isin(word['combinations'])]
+    queries = word_combinations.groupby(["query"]).head(1)
+    best_queries = queries.head(TOP_AMOUNT)
+    word["score"] = word_combinations["score"].max()
+    word["queries"] = best_queries[["query", "similarity"]].to_json(orient="records")
     del word["combinations"]
 
   return words
