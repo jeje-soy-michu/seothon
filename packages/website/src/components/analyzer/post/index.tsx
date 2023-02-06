@@ -1,24 +1,7 @@
 import { component$ } from '@builder.io/qwik'
 import { useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
-
-export const InputTextArea = component$(({isDisabled}: {isDisabled: boolean}) => {
-  const context = useAnalyzerContext()
-  return (
-    <>
-      <textarea
-        class="textarea textarea-bordered textarea-lg w-full h-full"
-        placeholder="Introduce your text to analyze"
-        id="text"
-        onInput$={(event) => {
-          if (!event.target) return
-          context.post = (event.target as HTMLTextAreaElement).value
-        }}
-        value={context.post}
-        disabled={isDisabled}
-      />
-    </>
-  )
-})
+import { InputTextArea } from '~/components/analyzer/post/input-text-area'
+import { TextAnalyzer } from '~/components/analyzer/post/text-analyzer'
 
 export default component$(() => {
   const {status} = useAnalyzerContext()
@@ -26,8 +9,9 @@ export default component$(() => {
   return (
     <div class="flex-row w-4/5 p-5">
       <label for="text">Text to analyze</label>
-      {status === "WAITING_FOR_INPUT" && <InputTextArea isDisabled={false} />}
-      {status === "ANALYZING" && <InputTextArea isDisabled={true} />}
+      {status === "WAITING_FOR_INPUT" && <InputTextArea />}
+      {status === "ANALYZING" && <InputTextArea disabled />}
+      {status === "FAST_CACHE" && <TextAnalyzer />}
     </div>
   )
 })

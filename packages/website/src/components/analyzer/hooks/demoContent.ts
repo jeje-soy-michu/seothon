@@ -30,5 +30,5 @@ export const demoState: AnalyzerState = {
     {id: 19, text: 'Customers', volume: 7500},
   ],
   keywordId: 20,
-  status: "WAITING_FOR_INPUT",
+  status: "FAST_CACHE",
 }
