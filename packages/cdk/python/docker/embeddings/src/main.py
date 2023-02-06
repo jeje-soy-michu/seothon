@@ -38,22 +38,31 @@ def calculate_score(request_id: str, file_name: str, use_new_embeddings: bool = 
   s3 = boto3.client('s3')
   s3_prefix = f"s3://{BUCKET_NAME}/requests/{request_id}"
   try:
-    cache_hit_df = pd.read_parquet(f"{s3_prefix}/cache_hit/{file_name}")
+    if use_new_embeddings:
+      key = s3.list_objects(Bucket=BUCKET_NAME, Prefix=f"requests/{request_id}/cache_hit/")['Contents'][0]['Key']
+      cache_file_path = f"s3://{BUCKET_NAME}/{key}"
+    else:
+      cache_file_path = f"{s3_prefix}/cache_hit/{file_name}"
+    cache_hit_df = pd.read_parquet(cache_file_path)
     if use_new_embeddings:
       new_embeddings_df = pd.read_parquet(f"{s3_prefix}/new-embeddings/{file_name}")
-      embeddings_df = pd.concat([cache_hit_df, new_embeddings_df])
+      embeddings_df = pd.concat([cache_hit_df, new_embeddings_df]).drop_duplicates(["text", "type"])
     else:
       embeddings_df = cache_hit_df
-  except OSError:
+  except KeyError:
     embeddings_df = pd.read_parquet(f"{s3_prefix}/new-embeddings/{file_name}")
 
-  combinations_df = embeddings_df[embeddings_df['type'] == "combination"]
-  keywords_df = embeddings_df[embeddings_df['type'] == "keyword"]
   post_text = s3.get_object(Bucket=BUCKET_NAME, Key=f"requests/{request_id}/post.txt")['Body'].read().decode('utf-8')
 
-  scores = calculate_words_score(post_text, combinations_df, keywords_df)
+  scores = calculate_words_score(post_text, embeddings_df)
 
-  send_message(request_id, json.dumps(scores))
+  body = {
+    "status": 200, 
+    "action": "FINAL_SCORE" if use_new_embeddings else "CACHED_SCORE",
+    "scores": scores,
+  }
+
+  send_message(request_id, json.dumps(body), close_connection=use_new_embeddings)
 
 @app.command()
 def fast_cache(request_id: str):
@@ -74,18 +83,27 @@ def fast_cache(request_id: str):
   merged_df = pd.concat([raw_keywords_df, raw_text_df])
 
   # Inner join to get the embeddings from the cache
-  merged_df = merged_df.merge(fast_cache_df, on=['text'], how='inner')
+  embeddings_df = merged_df.merge(fast_cache_df, on=['text'], how='inner')
 
-  combinations_df = merged_df[merged_df['type'] == "combination"]
-  keywords_df = merged_df[merged_df['type'] == "keyword"]
+  combinations_df = embeddings_df[embeddings_df['type'] == "combination"]
+  keywords_df = embeddings_df[embeddings_df['type'] == "keyword"]
 
   if combinations_df.empty or keywords_df.empty:
-    print("No combinations found")
+    body = {
+      "status": 404, 
+      "action": "FAST_CACHE",
+    }
     return
 
-  scores = calculate_words_score(post_text, combinations_df, keywords_df)
+  scores = calculate_words_score(post_text, embeddings_df)
 
-  send_message(request_id, json.dumps(scores))
+  body = {
+    "status": 200, 
+    "action": "FAST_CACHE",
+    "scores": scores,
+  }
+
+  send_message(request_id, json.dumps(body))
 
 if __name__ == '__main__':
   app()

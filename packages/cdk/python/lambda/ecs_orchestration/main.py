@@ -3,12 +3,11 @@ import boto3
 import urllib.parse
 
 
+CAPACITY_PROVIDER_NAME = os.environ['CAPACITY_PROVIDER_NAME']
 CLUSTER_NAME = os.environ['CLUSTER_NAME']
 CONTAINER_NAME = os.environ['CONTAINER_NAME']
-FARGATE_CONTAINER_NAME = os.environ['FARGATE_CONTAINER_NAME']
-FARGATE_TASK_DEFINITION_ARN = os.environ['FARGATE_TASK_DEFINITION_ARN']
-FARGATE_SUBNETS = os.environ['FARGATE_SUBNETS'].split(',')
 TASK_DEFINITION_ARN = os.environ['TASK_DEFINITION_ARN']
+VPC_SUBNETS = os.environ['VPC_SUBNETS'].split(',')
 
 client = boto3.client('ecs')
 
@@ -18,11 +17,19 @@ def handler(event, _):
   if stage == 'cache_miss':
     args = {
       'cluster': CLUSTER_NAME,
-      'launchType': 'EC2', # FIXME: we should use a capacityProviderStrategy
+      'capacityProviderStrategy': [ {'capacityProvider': 'FARGATE_SPOT'} ],
       'overrides': {
         'containerOverrides': [
           {'name': CONTAINER_NAME, 'command': [ "fetch-embeddings", key ]},
         ],
+        'memory': '2048',
+        'cpu': '256',
+      },
+      'networkConfiguration': {
+        'awsvpcConfiguration': {
+          'subnets': VPC_SUBNETS,
+          'assignPublicIp': 'ENABLED',
+        },
       },
       'taskDefinition': TASK_DEFINITION_ARN,
     }
@@ -38,32 +45,41 @@ def handler(event, _):
       
     args = {
       'cluster': CLUSTER_NAME,
-      'launchType': 'EC2', # FIXME: we should use a capacityProviderStrategy
+      'capacityProviderStrategy': [ {'capacityProvider': 'FARGATE_SPOT'} ],
       'overrides': {
         'containerOverrides': [
           {'name': CONTAINER_NAME, 'command': command},
         ],
+        'memory': '2048',
+        'cpu': '256',
+      },
+      'networkConfiguration': {
+        'awsvpcConfiguration': {
+          'subnets': VPC_SUBNETS,
+          'assignPublicIp': 'ENABLED',
+        },
       },
       'taskDefinition': TASK_DEFINITION_ARN,
     }
     
+    print(args)
     client.run_task(**args)
   elif key.split('/')[-1] == 'keywords.json':
     request_id = key.split('/')[-2]
     args = {
       'cluster': CLUSTER_NAME,
-      'capacityProviderStrategy': [ {'capacityProvider': 'FARGATE_SPOT', 'weight': 1, 'base': 0} ],
+      'capacityProviderStrategy': [ {'capacityProvider': 'FARGATE_SPOT'} ],
       'overrides': {
         'containerOverrides': [
-          {'name': FARGATE_CONTAINER_NAME, 'command': [ "fast-cache", request_id ]},
+          {'name': CONTAINER_NAME, 'cpu': 8192, 'memory': 61440, 'command': [ "fast-cache", request_id ]},
         ],
       },
       'networkConfiguration': {
         'awsvpcConfiguration': {
-          'subnets': FARGATE_SUBNETS,
+          'subnets': VPC_SUBNETS,
           'assignPublicIp': 'ENABLED',
         },
       },
-      'taskDefinition': FARGATE_TASK_DEFINITION_ARN,
+      'taskDefinition': TASK_DEFINITION_ARN,
     }
     client.run_task(**args)

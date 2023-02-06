@@ -1,4 +1,5 @@
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib'
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling'
 import * as apigwv2 from '@aws-cdk/aws-apigatewayv2-alpha'
 import * as apigwv2_integrations from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
 import * as ecs from 'aws-cdk-lib/aws-ecs'
@@ -55,62 +56,47 @@ export class ApiStack extends Stack {
       vpc,
     })
 
-    // Add capacity to it
-    cluster.addCapacity('DefaultAutoScalingGroupCapacity', {
-      instanceType: new ec2.InstanceType('t2.micro'),
-      desiredCapacity: 1,
+    const capacityProvider = new ecs.AsgCapacityProvider(this, 'DefaultCapacityProvider', {
+      autoScalingGroup: new autoscaling.AutoScalingGroup(this, 'DefaultAutoScalingGroup', {
+        vpc,
+        instanceType: new ec2.InstanceType('t2.micro'),
+        desiredCapacity: 1,
+        machineImage: ecs.EcsOptimizedImage.amazonLinux2(),
+      }),
     })
+    cluster.addAsgCapacityProvider(capacityProvider)
+    
 
     // Create a task definition
-    const ec2TaskDefinition = new ecs.Ec2TaskDefinition(this, 'Ec2TaskDef')
+    const taskDefinition = new ecs.TaskDefinition(this, 'TaskDefinition', {
+      compatibility: ecs.Compatibility.EC2_AND_FARGATE,
+      cpu: "8192",
+      memoryMiB: "61440",
+    })
     
     // Add a container to the task definition
-    const container = ec2TaskDefinition.addContainer('Embeddings', {
+    const container = taskDefinition.addContainer('Score', {
       image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../python/docker/embeddings')),
+      cpu: 128,
       memoryLimitMiB: 896,
       environment: {
+        AWS_DEFAULT_REGION: Stack.of(this).region,
         BUCKET_NAME: this._bucket.bucketName,
         WS_ENDPOINT_URL: this._webSocketStage.callbackUrl,
-        AWS_DEFAULT_REGION: Stack.of(this).region,
       },
       secrets: {
         COHERE_API_KEY: ecs.Secret.fromSecretsManager(this._cohereApiKey),
       },
       logging: ecs.LogDrivers.awsLogs({
-        streamPrefix: 'Embeddings',
-      })
+        streamPrefix: 'Score',
+      }),
     })
 
     // Grant the container access to the S3 bucket
-    this._bucket.grantReadWrite(ec2TaskDefinition.taskRole)
+    this._bucket.grantReadWrite(taskDefinition.taskRole)
 
     // Grant the container access to write to WebSockets
-    this._webSocketStage.grantManagementApiAccess(ec2TaskDefinition.taskRole)
-
-    // Create a task definition for the Fargate service
-    const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'FargateTaskDef', {
-      cpu: 8192,
-      memoryLimitMiB: 61440,
-    })
-
-    // Add a container to the task definition
-    const fargateContainer = fargateTaskDefinition.addContainer('FastCache', {
-      image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../python/docker/embeddings')),
-      memoryLimitMiB: 61440,
-      environment: {
-        BUCKET_NAME: this._bucket.bucketName,
-        WS_ENDPOINT_URL: this._webSocketStage.callbackUrl,
-      },
-      logging: ecs.LogDrivers.awsLogs({
-        streamPrefix: 'FastCache',
-      })
-    })
-
-    // Grant the container access to the S3 bucket
-    this._bucket.grantReadWrite(fargateTaskDefinition.taskRole)
-
-    // Grant the container access to write to WebSockets
-    this._webSocketStage.grantManagementApiAccess(fargateTaskDefinition.taskRole)
+    this._webSocketStage.grantManagementApiAccess(taskDefinition.taskRole)
 
     // Create a lambda function to orchestrate the ECS task
     const orchestrationHandler = new lambda.Function(this, 'EcsOrchestrationLambda', {
@@ -118,18 +104,16 @@ export class ApiStack extends Stack {
       handler: 'main.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../python/lambda/ecs_orchestration')),
       environment: {
+        CAPACITY_PROVIDER_NAME: capacityProvider.capacityProviderName,
         CLUSTER_NAME: cluster.clusterName,
         CONTAINER_NAME: container.containerName,
-        FARGATE_CONTAINER_NAME: fargateContainer.containerName,
-        FARGATE_TASK_DEFINITION_ARN: fargateTaskDefinition.taskDefinitionArn,
-        FARGATE_SUBNETS: vpc.publicSubnets.map(subnet => subnet.subnetId).join(','),
-        TASK_DEFINITION_ARN: ec2TaskDefinition.taskDefinitionArn,
+        VPC_SUBNETS: vpc.publicSubnets.map(subnet => subnet.subnetId).join(','),
+        TASK_DEFINITION_ARN: taskDefinition.taskDefinitionArn,
       }
     })
 
     // Grant the lambda run task permissions on the cluster
-    ec2TaskDefinition.grantRun(orchestrationHandler)
-    fargateTaskDefinition.grantRun(orchestrationHandler)
+    taskDefinition.grantRun(orchestrationHandler)
 
     // Trigger the lambda function when a new parquet file is added to the requests folder in the bucket
     this._bucket.addEventNotification(
