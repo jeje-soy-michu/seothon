@@ -43,13 +43,13 @@ def handler(event, _):
 
   # Verify all required fields are present
   if not payload.get("text") or not payload.get("keywords"):
-    ws.post_to_connection(Data=b"Missing required fields", ConnectionId=request_id)
+    ws.post_to_connection(Data=json.dumps({"status": 400, "error": "Missing required fields"}).encode(), ConnectionId=request_id)
     return {
       "statusCode": 400,
       "body": "Missing required fields"
     }
 
-  ws.post_to_connection(Data=b"Analysis started", ConnectionId=request_id)
+  ws.post_to_connection(Data=json.dumps({"status": 200, "action": "ANALYZING"}).encode(), ConnectionId=request_id)
   post_text = payload["text"]
   keywords = payload["keywords"]
   
