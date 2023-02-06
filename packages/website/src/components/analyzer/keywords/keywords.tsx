@@ -1,7 +1,7 @@
 import { component$ } from '@builder.io/qwik'
 import { useKeywords } from '~/components/analyzer/hooks/useKeywords'
-import Keyword from '~/components/analyzer/keyword'
-import NewKeyword from '~/components/analyzer/new-keyword'
+import Keyword from '~/components/analyzer/keywords/keyword'
+import NewKeyword from '~/components/analyzer/keywords/new-keyword'
 
 export default component$(() => {
   const keywords = useKeywords()

@@ -1,6 +1,6 @@
 import { createContext, useContext, useContextProvider, useStore } from "@builder.io/qwik"
 import { demoState } from "~/components/analyzer/hooks/demoContent"
-import type { Keyword } from "~/components/analyzer/keyword"
+import type { Keyword } from "~/components/analyzer/keywords/keyword"
 
 export type AnalyzerState = {
   post: string
