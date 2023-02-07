@@ -6,10 +6,12 @@ type Props = {
 }
 
 export default component$(({line}: Props) => {
+  const words = line.split(' ').map((w, i) => ({word: w, key: i}))
+
   return (
     <div class="flex flex-wrap justify-left whitespace-pre">
       {!line && <br />}
-      {line.split(' ').map((word, index) => <Word key={index} word={word} />)}
+      {words.map(({key, word}) => <Word key={key} word={word} />)}
     </div>
   )
 })
