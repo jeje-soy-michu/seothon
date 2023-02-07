@@ -17,7 +17,7 @@ export default component$(() => {
         context.keywordId = demoState.keywordId
         context.status = demoState.status
       }}>Load demo</button>
-      <button class="btn m-3" disabled={context.status !== "WAITING_FOR_INPUT"} onClick$={
+      <button class="btn m-3" disabled={context.status !== "WAITING_FOR_INPUT" || !context.post || !context.keywords.length} onClick$={
         () => {
           isAnalyzing.value = true
         }
