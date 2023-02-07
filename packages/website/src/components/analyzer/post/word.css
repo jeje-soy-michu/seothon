@@ -1,0 +1,43 @@
+.score-0 {
+  background-color: hsl(var(--erc));
+}
+
+.score-1 {
+  background-color: hsl(var(--erc));
+}
+
+.score-2 {
+  background-color: hsl(var(--wa));
+}
+
+.score-3 {
+  background-color: hsl(var(--wa));
+}
+
+.score-4 {
+  background-color: hsl(var(--inc));
+}
+
+.score-5 {
+  background-color: hsl(var(--inc));
+}
+
+.score-6 {
+  background-color: hsl(var(--inc));
+}
+
+.score-7 {
+  background-color: hsl(var(--suc));
+}
+
+.score-8 {
+  background-color: hsl(var(--suc));
+}
+
+.score-9 {
+  background-color: hsl(var(--suc));
+}
+
+.score-10 {
+  background-color: hsl(var(--su))
+}

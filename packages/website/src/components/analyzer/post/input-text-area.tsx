@@ -12,6 +12,7 @@ export const InputTextArea = component$(({disabled = false}: {disabled?: boolean
         onInput$={(event) => {
           if (!event.target) return
           context.post = (event.target as HTMLTextAreaElement).value
+          context.isDemo = false
         }}
         value={context.post}
         disabled={disabled}

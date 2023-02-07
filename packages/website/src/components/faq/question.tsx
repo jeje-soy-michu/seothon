@@ -1,15 +1,18 @@
 import { component$ } from '@builder.io/qwik'
 
-export default component$(() => {
+type Props = {
+  question: string
+  answer: string
+}
+
+export default component$(({answer, question}: Props) => {
 
   return (
     <details class="group [&_summary::-webkit-details-marker]:hidden">
       <summary
         class="flex items-center justify-between p-4 rounded-lg cursor-pointer bg-gray-50"
       >
-        <h2 class="font-medium text-gray-900">
-          Lorem ipsum dolor sit amet consectetur adipisicing?
-        </h2>
+        <h2 class="font-medium text-gray-900">{question}</h2>
 
         <svg
           class="ml-1.5 h-5 w-5 flex-shrink-0 transition duration-300 group-open:-rotate-180"
@@ -27,12 +30,7 @@ export default component$(() => {
         </svg>
       </summary>
 
-      <p class="px-4 mt-4 leading-relaxed text-gray-700">
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ab hic veritatis
-        molestias culpa in, recusandae laboriosam neque aliquid libero nesciunt
-        voluptate dicta quo officiis explicabo consequuntur distinctio corporis
-        earum similique!
-      </p>
+      <p class="px-4 mt-4 leading-relaxed text-gray-700">{answer}</p>
     </details>
   )
 })

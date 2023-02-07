@@ -27,6 +27,7 @@ export default component$(() => {
         if (volume.value <= 0) return
 
         context.keywords.push({id: context.keywordId++, text: keyword.value, volume: volume.value})
+        context.isDemo = false
         keyword.value = ''
         volume.value = 0
       }}>Add keyword</button>
