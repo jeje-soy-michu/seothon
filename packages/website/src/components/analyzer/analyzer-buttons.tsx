@@ -17,11 +17,14 @@ export default component$(() => {
         context.keywordId = demoState.keywordId
         context.status = demoState.status
       }}>Load demo</button>
-      <button class="btn m-3" disabled={context.status !== "WAITING_FOR_INPUT" || !context.post || !context.keywords.length} onClick$={
-        () => {
-          isAnalyzing.value = true
-        }
-      }>{isAnalyzing.value ? `Processing (${context.status})` : "Analyze"}</button>
+      <button class="btn m-3" disabled={context.status !== "WAITING_FOR_INPUT" || !context.post || !context.keywords.length} 
+      onClick$={() => {isAnalyzing.value = true}}>
+      {
+        isAnalyzing.value ? `Processing (${context.status})` : 
+        context.isDemo    ? "Fake Analyze"
+                          : "Analyze"
+      }
+      </button>
       <button class="btn m-3" disabled={isAnalyzing.value} onClick$={() => {
         context.cache = undefined
         context.isDemo = false
