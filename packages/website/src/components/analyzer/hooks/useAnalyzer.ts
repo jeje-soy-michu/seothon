@@ -14,6 +14,15 @@ export const rawCacheToHashMap = (cache: RawCacheEntry[]) => {
   }, {})
 }
 
+export const ACTION_TO_NUMBER: {[key: string]: number} = {
+  "WAITING_FOR_INPUT": 0,
+  "REQUESTED": 1,
+  "ANALYZING": 2,
+  "FAST_CACHE": 3,
+  "CACHED_SCORE": 4,
+  "FINAL_SCORE": 5,
+}
+
 export const useAnalyzer = () => {
   const context = useAnalyzerContext()
   const isAnalyzing = useSignal(false)
@@ -42,6 +51,8 @@ export const useAnalyzer = () => {
       const data = JSON.parse(event.data.replace(/\bNaN\b/g, "null"))
 
       if (data.status === 200) {
+        if (ACTION_TO_NUMBER[data.action] < ACTION_TO_NUMBER[context.status]) return
+        
         context.status = data.action
 
         if (data.scores) {

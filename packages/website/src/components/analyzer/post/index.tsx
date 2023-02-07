@@ -1,4 +1,5 @@
 import { component$, useClientEffect$, useSignal } from '@builder.io/qwik'
+import { ACTION_TO_NUMBER } from '~/components/analyzer/hooks/useAnalyzer'
 import { useAnalyzerContext } from '~/components/analyzer/hooks/useAnalyzerContext'
 import { InputTextArea } from '~/components/analyzer/post/input-text-area'
 import { TextAnalyzer } from '~/components/analyzer/post/text-analyzer'
@@ -10,26 +11,7 @@ export default component$(() => {
 
   useClientEffect$(({track}) => {
     track(() => context.status)
-    switch (context.status) {
-      case "WAITING_FOR_INPUT":
-        step.value = 0
-        break
-      case "REQUESTED":
-        step.value = 1
-        break
-      case "ANALYZING":
-        step.value = 2
-        break
-      case "FAST_CACHE":
-        step.value = 3
-        break
-      case "CACHED_SCORE":
-        step.value = 4
-        break
-      case "FINAL_SCORE":
-        step.value = 5
-        break
-    }
+    step.value = ACTION_TO_NUMBER[context.status]
   })
 
   return (
