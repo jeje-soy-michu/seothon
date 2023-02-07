@@ -44,16 +44,13 @@ export const useAnalyzer = () => {
       if (data.status === 200) {
         context.status = data.action
 
-        console.log({data})
-        
         if (data.scores) {
           const cache: RawCacheEntry[] = data.scores.map((item: { word: string, score: number, queries: string }) => ({...item, queries: JSON.parse(item.queries)}))
           context.cache = rawCacheToHashMap(cache)
-          console.log({cache, context})
         }
       } else {
         context.status = "ERROR"
-        console.error(data)
+        ws.close()
       }
     }
 
