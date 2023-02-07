@@ -59,9 +59,6 @@ def calculate_words_score(post_text: str, embeddings_df: pd.DataFrame):
   # Add the scores to the keywords and combinations dataframe
   keywords_and_combinations = keywords_and_combinations.drop(columns=["score"]).merge(scores, how="inner", on="text")
 
-  # Normalize the scores between 0 and 1
-  keywords_and_combinations["score"] = (keywords_and_combinations["score"] - keywords_and_combinations["score"].min()) / (keywords_and_combinations["score"].max() - keywords_and_combinations["score"].min())
-
   # Sort the keywords and combinations by similarity
   keywords_and_combinations = keywords_and_combinations.sort_values(by="similarity", ascending=False)
 
@@ -86,5 +83,11 @@ def calculate_words_score(post_text: str, embeddings_df: pd.DataFrame):
     word["score"] = word_combinations["score"].max()
     word["queries"] = best_queries[["query", "similarity"]].to_json(orient="records")
     del word["combinations"]
+  
+  # Normalize the scores between 0 and 1
+  max_score = max(map(lambda x: x["score"], words))
+  min_score = min(map(lambda x: x["score"], words))
+  for word in words:
+    word["score"] = (word["score"] - min_score) / (max_score - min_score)
 
   return words
