@@ -1,21 +1,21 @@
 .score-0 {
-  background-color: hsl(var(--erc));
+  background-color: hsl(var(--er));
 }
 
 .score-1 {
-  background-color: hsl(var(--erc));
+  background-color: hsl(var(--er));
 }
 
 .score-2 {
-  background-color: hsl(var(--wa));
+  background-color: hsl(var(--er));
 }
 
 .score-3 {
-  background-color: hsl(var(--wa));
+  background-color: hsl(var(--erc));
 }
 
 .score-4 {
-  background-color: hsl(var(--inc));
+  background-color: hsl(var(--erc));
 }
 
 .score-5 {
@@ -27,7 +27,7 @@
 }
 
 .score-7 {
-  background-color: hsl(var(--suc));
+  background-color: hsl(var(--inc));
 }
 
 .score-8 {
